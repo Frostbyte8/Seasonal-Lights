@@ -10,7 +10,7 @@
 // and the renderer only gets the image data it needs.
 
 // [TODO]:
-// Packed structs
+// Packed structs might be necessary here for 64 bit.
 
 namespace ChristmasBulbConstants {
     static const char               HEADER_ID[] = "bluBrgiT\x04";
@@ -20,6 +20,11 @@ namespace ChristmasBulbConstants {
     static const unsigned int       MAX_STR_SIZE = 80;
     static const unsigned __int32   MAX_BULB_IDS = 37;
     static const unsigned int       MAX_FLAVORS = 8;
+}
+
+namespace ChristmasBulbErrors {
+    static const int INVALID_HEADER     = -1;
+    static const int FILE_NOT_FOUND     = -2;
 }
 
 struct ChristmasBulbHeader {
@@ -80,10 +85,10 @@ struct ChristmasBulbHeader {
 struct CachedIDInfo {
     unsigned __int8 TOTAL_IDS;
     // [TODO]: Useful?
-    unsigned __int8 TOTAL_TIDS;
-    unsigned __int8 TOTAL_RIDS;
-    unsigned __int8 TOTAL_LIDS;
-    unsigned __int8 TOTAL_BIDS;
+    unsigned __int8 MAX_IDX_TIDS;
+    unsigned __int8 MAX_IDX_RIDS;
+    unsigned __int8 MAX_IDX_LIDS;
+    unsigned __int8 MAX_IDX_BIDS;
 };
 
 struct GIFData {
@@ -122,8 +127,12 @@ class ChristmasBulbPackage {
         void initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc);
         ~ChristmasBulbPackage();
 
-        __forceinline const D2DImageInfo* getBulbInfo(const size_t& index) const {
-            return &(bmpData[index]);
+        __forceinline const D2DImageInfo* getBulbInfo(const size_t& flavor) const {
+
+            size_t whichFlavor = flavor % cachedIDInfo.MAX_IDX_TIDS;
+            whichFlavor = header.TIDs[whichFlavor];
+
+            return &(bmpData[whichFlavor]);
         }
 
     private:

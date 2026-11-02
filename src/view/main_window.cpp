@@ -259,7 +259,7 @@ void MainWindowView::shutdown() {
 
 void MainWindowView::loadBulb() {
 
-    christmasBulb.loadBulb("D:\\dump\\11.bul");
+    christmasBulb.loadBulb("D:\\dump\\12.bul");
     christmasBulb.initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
     SetTimer(hWnd, 0, 100, NULL);
 
@@ -339,19 +339,29 @@ LRESULT MainWindowView::windowProc(const UINT& msg, const WPARAM wParam, const L
 }
 
 bool MainWindowView::onPaint() {
+
+    // TODO: Handle no valid bulb
+
     dxInfo->dc->BeginDraw();
     dxInfo->dc->Clear();
 
-    static int i = 0;
+    static int i = 0;   // Frame
+    static int k = 4;   // Current Flavor (TODO: Current Flavor only updates after all bulbs for the side have been drawn)
 
-    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(0);
+    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(k);
 
     D2D1_RECT_F dest = { 0, 0, static_cast<float>(bulbInfo->width), static_cast<float>(bulbInfo->height)};
 
     dxInfo->dc->DrawBitmap(bulbInfo->frames[i], &dest);
     i++;
-    if(i == 2) {
+    //k++;
+
+    if(i == bulbInfo->frames.size()) {
         i = 0;
+    }
+
+    if(k == 8) {
+        k = 0;
     }
 
     HRESULT status = dxInfo->dc->EndDraw();

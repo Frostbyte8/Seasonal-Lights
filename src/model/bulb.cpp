@@ -1,6 +1,26 @@
 #include "bulb.h"
 #include <stdlib.h>
 
+__forceinline void CountSideIDs(const unsigned __int32 (&IDs)[ChristmasBulbConstants::MAX_FLAVORS], unsigned __int8& side) {
+
+    /// Here we get the max index for a given side.
+
+    for(size_t i = 0; i < ChristmasBulbConstants::MAX_FLAVORS; ++i) {
+        if(IDs[i] == 0xFFFFFFFF) {
+            side = i - 1;
+            return;
+        }
+    }
+
+    side = ChristmasBulbConstants::MAX_FLAVORS - 1;
+    return;
+
+}
+
+//==============================================================================
+// Destructor
+//==============================================================================
+
 ChristmasBulbPackage::~ChristmasBulbPackage() {
 
     // TODO: This should be in a function called destroy bitmaps.
@@ -28,13 +48,21 @@ ChristmasBulbPackage::~ChristmasBulbPackage() {
 
 }
 
+//==============================================================================
+// Public Functions
+//==============================================================================
+
+//------------------------------------------------------------------------------
+// loadBulb - Load a bulb from the path given.
+//------------------------------------------------------------------------------
+
 int ChristmasBulbPackage::loadBulb(const std::string& path) {
 
     FILE* fp = NULL;
     fopen_s(&fp, &path[0], "rb");
 
     if(fp == NULL) {
-        return -1;
+        return ChristmasBulbErrors::FILE_NOT_FOUND;
     }
 
     char headerID[sizeof(ChristmasBulbConstants::HEADER_ID)];
@@ -42,17 +70,25 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 
     if(strcmp(headerID, ChristmasBulbConstants::HEADER_ID)) {
         fclose(fp);
-        return -1;
+        return ChristmasBulbErrors::INVALID_HEADER;
     }
 
     // TODO: Read entire file into memory, then do work.
+    // NOTE: The 2 is to skip over the two null terminators.
     fseek(fp, 2, SEEK_CUR);
     fread(&header, sizeof(ChristmasBulbHeader), 1, fp);
+
+    // Update cached info about how many flavors are on each side for this bulb
+
+    CountSideIDs(header.TIDs, cachedIDInfo.MAX_IDX_TIDS);
+    CountSideIDs(header.RIDs, cachedIDInfo.MAX_IDX_RIDS);
+    CountSideIDs(header.LIDs, cachedIDInfo.MAX_IDX_LIDS);
+    CountSideIDs(header.BIDs, cachedIDInfo.MAX_IDX_BIDS);
 
     // Now read all the information about the GIFs in the file.
     fread(&infoTable[0], sizeof(GIFInfoTable), ChristmasBulbConstants::MAX_BULB_IDS, fp);
 
-
+    // TODO: This needs to be properly checked
     cachedIDInfo.TOTAL_IDS = ChristmasBulbConstants::MAX_BULB_IDS;
 
     // Load GIF Data and track how many IDs we have.
@@ -60,8 +96,7 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
     for(int i = 0; i < ChristmasBulbConstants::MAX_BULB_IDS; ++i) {
 
         if(!infoTable[i].size) {
-            cachedIDInfo.TOTAL_IDS = i - 1;
-            break;
+            continue;
         }
 
         fseek(fp, infoTable[i].offset, SEEK_SET);
@@ -80,12 +115,13 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 
     fclose(fp);
 
-
-
-
     return 0;
 
 }
+
+//------------------------------------------------------------------------------
+// loadBulb - Load a bulb from the path given.
+//------------------------------------------------------------------------------
 
 void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc) {
 

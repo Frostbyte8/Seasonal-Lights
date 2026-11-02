@@ -40,6 +40,10 @@ struct DXInfo {
     ComPtr<IDCompositionVisual> visual;
 };
 
+struct SideInfo {
+    unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
+    std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
+};
 
 class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInterface {
     friend WndAsClass;
