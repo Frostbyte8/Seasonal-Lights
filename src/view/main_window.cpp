@@ -348,7 +348,7 @@ bool MainWindowView::onPaint() {
     static int i = 0;   // Frame
     static int k = 4;   // Current Flavor (TODO: Current Flavor only updates after all bulbs for the side have been drawn)
 
-    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(k);
+    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP_RIGHT, k);
 
     D2D1_RECT_F dest = { 0, 0, static_cast<float>(bulbInfo->width), static_cast<float>(bulbInfo->height)};
 

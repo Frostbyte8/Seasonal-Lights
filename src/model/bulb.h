@@ -1,9 +1,12 @@
 #pragma once
 
+#include "../frost_util.h"
+
 #include <vector>
 #include <string>
 #include <d2d1_2.h>
 #include <wincodec.h>
+#include <assert.h>
 
 // [TODO]:
 // At some point, I plan to split this all so the GUI stuff only needs the Header + Preview Bulb
@@ -26,6 +29,17 @@ namespace ChristmasBulbErrors {
     static const int INVALID_HEADER     = -1;
     static const int FILE_NOT_FOUND     = -2;
 }
+
+enum class BulbSide {
+    TOP = 0,
+    RIGHT,
+    LEFT,
+    BOTTOM,
+    TOP_LEFT,
+    TOP_RIGHT,
+    BOTTOM_RIGHT,
+    BOTTOM_LEFT,
+};
 
 struct ChristmasBulbHeader {
 
@@ -65,6 +79,7 @@ struct ChristmasBulbHeader {
     // Corner Bulbs can only have 1 Image simply because they can only ever show 1.
     // If they're not set, they use topLeftID[0] for the two two bulbs, and bottomRightId for
     // the two bottom bulbs
+    // TODO: We can put these in an array so they're easier to access
     unsigned __int32    topLeftID;
     unsigned __int32    topRightID;
     unsigned __int32    bottomRightID;
@@ -127,10 +142,42 @@ class ChristmasBulbPackage {
         void initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc);
         ~ChristmasBulbPackage();
 
-        __forceinline const D2DImageInfo* getBulbInfo(const size_t& flavor) const {
+        __forceinline const D2DImageInfo* getBulbInfo(const BulbSide& whichSide, const size_t& flavor) const {
 
-            size_t whichFlavor = flavor % cachedIDInfo.MAX_IDX_TIDS;
-            whichFlavor = header.TIDs[whichFlavor];
+            size_t whichFlavor = flavor;
+
+            switch(whichSide) {
+                case BulbSide::TOP:
+                    whichFlavor %= cachedIDInfo.MAX_IDX_TIDS;
+                    whichFlavor = header.TIDs[whichFlavor];
+                    break;
+                case BulbSide::RIGHT:
+                    whichFlavor %= cachedIDInfo.MAX_IDX_RIDS;
+                    whichFlavor = header.RIDs[whichFlavor];
+                    break;
+                case BulbSide::LEFT:
+                    whichFlavor %= cachedIDInfo.MAX_IDX_LIDS;
+                    whichFlavor = header.LIDs[whichFlavor];
+                    break;
+                case BulbSide::BOTTOM:
+                    whichFlavor %= cachedIDInfo.MAX_IDX_BIDS;
+                    whichFlavor = header.BIDs[whichFlavor];
+                    break;
+                case BulbSide::TOP_LEFT:
+                    whichFlavor = header.topLeftID;
+                    break;
+                case BulbSide::TOP_RIGHT:
+                    whichFlavor = header.topRightID;
+                    break;
+                case BulbSide::BOTTOM_RIGHT:
+                    whichFlavor = header.bottomRightID;
+                    break;
+                case BulbSide::BOTTOM_LEFT:
+                    whichFlavor = header.bottomLeftID;
+                    break;
+                default:
+                    NODEFAULT;
+            }
 
             return &(bmpData[whichFlavor]);
         }

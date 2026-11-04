@@ -24,6 +24,8 @@ __forceinline void CountSideIDs(const unsigned __int32 (&IDs)[ChristmasBulbConst
 ChristmasBulbPackage::~ChristmasBulbPackage() {
 
     // TODO: This should be in a function called destroy bitmaps.
+    // TODO: Figure out what we really need to delete, and what the OS does
+    // to avoid unnecessary cleanup.
 
     const size_t NUM_BMPS = bmpData.size();
     for(size_t i = 0; i < NUM_BMPS; ++i) {
@@ -47,6 +49,10 @@ ChristmasBulbPackage::~ChristmasBulbPackage() {
     }
 
 }
+
+//==============================================================================
+// Accessors
+//==============================================================================
 
 //==============================================================================
 // Public Functions
@@ -120,7 +126,7 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 }
 
 //------------------------------------------------------------------------------
-// loadBulb - Load a bulb from the path given.
+// initBitmaps - Convert GIF data into BMP data for Direct2D to use.
 //------------------------------------------------------------------------------
 
 void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc) {
