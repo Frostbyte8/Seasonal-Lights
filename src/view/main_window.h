@@ -41,8 +41,9 @@ struct DXInfo {
 };
 
 struct SideInfo {
-    unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
+    //unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
     std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
+    LONG                    sideLength;     // How many pixels long is this side?
 };
 
 class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInterface {
@@ -58,6 +59,7 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
         bool initDirect2D();
         void shutdown();
         void loadBulb();
+        void initSize();
         WPARAM doLoop();
 
         void implDisplayMessage(const wchar_t* message, const wchar_t* title) {
@@ -84,6 +86,7 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
         DXInfo* dxInfo;
 
         ChristmasBulbPackage            christmasBulb;
+        SideInfo                        sideInfo;
 
         ComPtr<IWICImagingFactory>      wicFactory;
         ComPtr<IWICBitmapDecoder>       gifDecoder;

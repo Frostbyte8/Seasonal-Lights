@@ -127,6 +127,8 @@ struct GIFInfoTable {
 
 };
 
+// TODO: Also cache widest/tallest flavor of bulb
+
 struct D2DImageInfo {
     unsigned __int16    width;
     unsigned __int16    height;

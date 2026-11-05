@@ -167,10 +167,10 @@ void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDe
 
                 // TODO: warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
                 decoder->GetFrame(k, &decodedFrame);
-                decodedFrame->GetMetadataQueryReader(&decodedMeta);
 
-                // TODO: Metadata might contain info about imgdesc/top and left, we can use that to support the other
-                // type of GIF the original program did not support.
+                UINT frameWidth;
+                UINT frameHeight;
+                decodedFrame->GetSize(&frameWidth, &frameHeight);
 
                 factory->CreateFormatConverter(&formatConverter);
                 formatConverter->Initialize(decodedFrame, GUID_WICPixelFormat32bppPBGRA, WICBitmapDitherTypeNone, NULL, 0.0, WICBitmapPaletteTypeCustom);
@@ -178,6 +178,55 @@ void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDe
                 // Now we take our Stream of Data, and convert it into a D2D Bitmap.
                 ID2D1Bitmap* bitmap = NULL;
                 dc->CreateBitmapFromWicBitmap(*(&formatConverter), NULL, &bitmap);
+
+                // If the frame Width doesn't match the width of the image already,
+                // It's a composite frame.
+
+                if (frameWidth != bulbInfo.width) {
+
+                    decodedFrame->GetMetadataQueryReader(&decodedMeta);
+
+                    PROPVARIANT var;
+                    PROPVARIANT var2;
+                    PropVariantInit(&var);
+                    PropVariantInit(&var2);
+
+                    HRESULT hr;
+                    
+                    // TODO: Check if these fail, and get some information about it for research
+
+                    hr = decodedMeta->GetMetadataByName(L"/imgdesc/Left", &var);
+                    LONG left = var.lVal;
+                    hr = decodedMeta->GetMetadataByName(L"/imgdesc/Top", &var2);
+                    LONG top = var2.lVal;
+                    
+                    ID2D1Bitmap* prevBitmap = bulbInfo.frames[bulbInfo.frames.size() - 1];
+
+                    D2D1_SIZE_U size = { 0 };
+                    D2D1_BITMAP_PROPERTIES bmpProp;
+                    
+                    size.width = prevBitmap->GetSize().width;
+                    size.height = prevBitmap->GetSize().height;
+                    prevBitmap->GetDpi(&bmpProp.dpiX, &bmpProp.dpiY);
+                    bmpProp.pixelFormat = prevBitmap->GetPixelFormat();
+
+                    ID2D1Bitmap* newBitmap = NULL;                   
+                    dc->CreateBitmap(size, bmpProp, &newBitmap);
+                    newBitmap->CopyFromBitmap(NULL, prevBitmap, NULL);
+                    
+                    D2D1_POINT_2U dest = { 0 };
+                    dest.x = left;
+                    dest.y = top;
+
+                    newBitmap->CopyFromBitmap(&dest, bitmap, NULL);
+
+                    bitmap->Release();
+                    bitmap = newBitmap;
+
+
+
+                }
+
 
                 bulbInfo.frames.push_back(bitmap);
 

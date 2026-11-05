@@ -2,7 +2,9 @@
 #include <d2d1.h>
 #include <d3d11.h>
 #include <d3dcommon.h>
+#include <debugapi.h>
 #include <dxgi1_3.h>
+#include <winuser.h>
 
 #define __D3D_IS_OK__(x) if(x != S_OK) { return false; }
 
@@ -49,6 +51,15 @@ bool MainWindowView::createWindow() {
         MessageBoxW(NULL, L"Window Creation Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
         return false;
     }
+
+    // TODO: If the monitor size should ever change we need to reset this and re-create the D2D stuff.
+
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
+    MoveWindow(hWnd, mi.rcMonitor.left, mi.rcMonitor.top,
+        mi.rcMonitor.right - mi.rcMonitor.left,
+        mi.rcMonitor.bottom - mi.rcMonitor.top, FALSE);
 
     return true;
 }
@@ -317,8 +328,9 @@ LRESULT MainWindowView::windowProc(const UINT& msg, const WPARAM wParam, const L
             onPaint();
             // If this doesn't work, DefWindowProc might do more than validate the region,
             // but this *should* work.
-            ValidateRect(hWnd, NULL);
-            return 0;
+            //ValidateRect(hWnd, NULL);
+            //return 0;
+            return DefWindowProcW(hWnd, msg, wParam, lParam);
 
 
         case WM_TIMER:
@@ -345,23 +357,23 @@ bool MainWindowView::onPaint() {
     dxInfo->dc->BeginDraw();
     dxInfo->dc->Clear();
 
-    static int i = 0;   // Frame
-    static int k = 4;   // Current Flavor (TODO: Current Flavor only updates after all bulbs for the side have been drawn)
+    //static int i = 0;   // Frame
+    //static int k = 4;   // Current Flavor (TODO: Current Flavor only updates after all bulbs for the side have been drawn)
 
-    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP_RIGHT, k);
+    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
+    D2D1_RECT_F dest = { 0, 0, 0, bulbInfo->height};
 
-    D2D1_RECT_F dest = { 0, 0, static_cast<float>(bulbInfo->width), static_cast<float>(bulbInfo->height)};
+    for(size_t i = 0; i < sideInfo.curFrame.size(); ++i) {
+        const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, i);
+        dest.right += bulbInfo->width;
+        dxInfo->dc->DrawBitmap(bulbInfo->frames[sideInfo.curFrame[i]], &dest);
 
-    dxInfo->dc->DrawBitmap(bulbInfo->frames[i], &dest);
-    i++;
-    //k++;
+        sideInfo.curFrame[i]++;
+        if (sideInfo.curFrame[i] >= bulbInfo->frames.size()) {
+            sideInfo.curFrame[i] = 0;
+        }
+        dest.left = dest.right;
 
-    if(i == bulbInfo->frames.size()) {
-        i = 0;
-    }
-
-    if(k == 8) {
-        k = 0;
     }
 
     HRESULT status = dxInfo->dc->EndDraw();
@@ -371,6 +383,28 @@ bool MainWindowView::onPaint() {
     __D3D_IS_OK__(status);
 
     return true;
+
+}
+
+void MainWindowView::initSize() {
+
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
+
+    sideInfo.sideLength = abs(mi.rcMonitor.right - mi.rcMonitor.left);
+    //const LONG height = abs(mi.rcMonitor.bottom - mi.rcMonitor.top);
+
+    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
+    sideInfo.curFrame.resize((sideInfo.sideLength / bulbInfo->width));
+
+
+
+    /*
+    char buf[256] = {0};
+    sprintf(buf, "Side Len: %d  | Bulbs: %d", sideInfo.sideLength, sideInfo.curFrame.size());
+    MessageBoxA(NULL, buf, "", MB_OK);
+    */
 
 }
 

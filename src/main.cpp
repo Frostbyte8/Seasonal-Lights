@@ -40,6 +40,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     mainWindowView.loadBulb();
 
+    mainWindowView.initSize();
+
     retVal = mainWindowView.doLoop();
 
     mainWindowView.shutdown();
