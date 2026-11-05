@@ -243,6 +243,13 @@ bool MainWindowView::initDirect2D() {
 
 void MainWindowView::shutdown() {
 
+    // Release the resources held by Direct2D
+
+    for(size_t i = 0; i < christmasBulb.size(); ++i) {
+        delete christmasBulb[i];
+        christmasBulb[i] = NULL;
+    }
+
     // Even though they're in ComPTRs, at shutdown we need to make sure they are released as code and drivers
     // outside our control could still be referencing our objects.
 
@@ -270,8 +277,20 @@ void MainWindowView::shutdown() {
 
 void MainWindowView::loadBulb() {
 
-    christmasBulb.loadBulb("D:\\dump\\12.bul");
-    christmasBulb.initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
+    ChristmasBulbPackage* bulbPackage = new ChristmasBulbPackage();
+
+    bulbPackage->loadBulb("D:\\dump\\12.bul");
+    bulbPackage->initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
+
+    christmasBulb.push_back(bulbPackage);
+
+    bulbPackage = new ChristmasBulbPackage();
+
+    bulbPackage->loadBulb("D:\\dump\\TheLastLeaf.bul");
+    bulbPackage->initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
+
+    christmasBulb.push_back(bulbPackage);
+
     SetTimer(hWnd, 0, 100, NULL);
 
 }
@@ -357,22 +376,35 @@ bool MainWindowView::onPaint() {
     dxInfo->dc->BeginDraw();
     dxInfo->dc->Clear();
 
-    //static int i = 0;   // Frame
-    //static int k = 4;   // Current Flavor (TODO: Current Flavor only updates after all bulbs for the side have been drawn)
 
-    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
-    D2D1_RECT_F dest = { 0, 0, 0, bulbInfo->height};
 
+    //const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
+    D2D1_RECT_F dest = { 0, 0, 0, 0};
+    size_t idx = 0;
+    size_t flavor = 0;
     for(size_t i = 0; i < sideInfo.curFrame.size(); ++i) {
-        const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, i);
+
+
+
+        const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
+
+        dest.bottom = bulbInfo->height;
         dest.right += bulbInfo->width;
+
         dxInfo->dc->DrawBitmap(bulbInfo->frames[sideInfo.curFrame[i]], &dest);
 
         sideInfo.curFrame[i]++;
         if (sideInfo.curFrame[i] >= bulbInfo->frames.size()) {
             sideInfo.curFrame[i] = 0;
+
         }
         dest.left = dest.right;
+        idx++;
+
+        if(idx >= christmasBulb.size()) {
+            idx = 0;
+            flavor++;
+        }
 
     }
 
@@ -395,7 +427,7 @@ void MainWindowView::initSize() {
     sideInfo.sideLength = abs(mi.rcMonitor.right - mi.rcMonitor.left);
     //const LONG height = abs(mi.rcMonitor.bottom - mi.rcMonitor.top);
 
-    const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
+    const D2DImageInfo* bulbInfo = christmasBulb[0]->getBulbInfo(BulbSide::TOP, 0);
     sideInfo.curFrame.resize((sideInfo.sideLength / bulbInfo->width));
 
 

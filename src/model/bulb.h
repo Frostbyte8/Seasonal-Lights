@@ -54,13 +54,13 @@ struct ChristmasBulbHeader {
 
     // Whether the Bulb is locked from editing or not. Bulbs downloaded have this
     // set so that people could not alter the bulb. 0 = Can Edit, 1 = Cannot edit.
-    // In Holiday Lights we ignore this and will 0 this upon saving.
+    // In Seasonal Lights we ignore this and will 0 this upon saving.
     unsigned __int32    locked;
 
     // Controls whether the bulb could be sent in. Possibly even got set when it
     // sent successfully. All downloaded bulb have this set to 0, but newly created
     // ones have this set to 1.
-    // In Holiday Lights we will be setting this to 0.
+    // In Seasonal Lights we will be setting this to 0.
     unsigned __int32    canSend;
 
     // These are all 80 character Null Terminated, ASCII strings.
@@ -128,6 +128,7 @@ struct GIFInfoTable {
 };
 
 // TODO: Also cache widest/tallest flavor of bulb
+// And we can probably rename D2DImageInfo to something more correct.
 
 struct D2DImageInfo {
     unsigned __int16    width;
@@ -150,19 +151,19 @@ class ChristmasBulbPackage {
 
             switch(whichSide) {
                 case BulbSide::TOP:
-                    whichFlavor %= cachedIDInfo.MAX_IDX_TIDS;
+                    whichFlavor = cachedIDInfo.MAX_IDX_TIDS == 0 ? 0 : whichFlavor % cachedIDInfo.MAX_IDX_TIDS;
                     whichFlavor = header.TIDs[whichFlavor];
                     break;
                 case BulbSide::RIGHT:
-                    whichFlavor %= cachedIDInfo.MAX_IDX_RIDS;
+                    whichFlavor = cachedIDInfo.MAX_IDX_RIDS == 0 ? 0 : whichFlavor % cachedIDInfo.MAX_IDX_RIDS;
                     whichFlavor = header.RIDs[whichFlavor];
                     break;
                 case BulbSide::LEFT:
-                    whichFlavor %= cachedIDInfo.MAX_IDX_LIDS;
+                    whichFlavor = cachedIDInfo.MAX_IDX_LIDS == 0 ? 0 : whichFlavor % cachedIDInfo.MAX_IDX_LIDS;
                     whichFlavor = header.LIDs[whichFlavor];
                     break;
                 case BulbSide::BOTTOM:
-                    whichFlavor %= cachedIDInfo.MAX_IDX_BIDS;
+                    whichFlavor = cachedIDInfo.MAX_IDX_BIDS == 0 ? 0 : whichFlavor % cachedIDInfo.MAX_IDX_BIDS;
                     whichFlavor = header.BIDs[whichFlavor];
                     break;
                 case BulbSide::TOP_LEFT:

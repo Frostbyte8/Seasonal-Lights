@@ -129,6 +129,9 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 // initBitmaps - Convert GIF data into BMP data for Direct2D to use.
 //------------------------------------------------------------------------------
 
+// TODO: We can probably split this function out of Bulb.cpp, and find another way
+// to process the bulb so this can remain more platform independent.
+
 void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc) {
 
     // Now we need to convert the gif data into something Direct2D Can use.
@@ -192,28 +195,28 @@ void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDe
                     PropVariantInit(&var2);
 
                     HRESULT hr;
-                    
+
                     // TODO: Check if these fail, and get some information about it for research
 
                     hr = decodedMeta->GetMetadataByName(L"/imgdesc/Left", &var);
                     LONG left = var.lVal;
                     hr = decodedMeta->GetMetadataByName(L"/imgdesc/Top", &var2);
                     LONG top = var2.lVal;
-                    
+
                     ID2D1Bitmap* prevBitmap = bulbInfo.frames[bulbInfo.frames.size() - 1];
 
                     D2D1_SIZE_U size = { 0 };
                     D2D1_BITMAP_PROPERTIES bmpProp;
-                    
+
                     size.width = prevBitmap->GetSize().width;
                     size.height = prevBitmap->GetSize().height;
                     prevBitmap->GetDpi(&bmpProp.dpiX, &bmpProp.dpiY);
                     bmpProp.pixelFormat = prevBitmap->GetPixelFormat();
 
-                    ID2D1Bitmap* newBitmap = NULL;                   
+                    ID2D1Bitmap* newBitmap = NULL;
                     dc->CreateBitmap(size, bmpProp, &newBitmap);
                     newBitmap->CopyFromBitmap(NULL, prevBitmap, NULL);
-                    
+
                     D2D1_POINT_2U dest = { 0 };
                     dest.x = left;
                     dest.y = top;

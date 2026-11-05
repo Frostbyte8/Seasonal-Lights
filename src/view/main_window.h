@@ -41,6 +41,8 @@ struct DXInfo {
 };
 
 struct SideInfo {
+    // IDs will be wchar_t of the file name in the end. A file name cannot exceed 32 characters without the .bul, which works
+    // for all the common bulbs I could find (The longest file name I found was 26 characters).
     //unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
     std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
     LONG                    sideLength;     // How many pixels long is this side?
@@ -85,8 +87,9 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
 
         DXInfo* dxInfo;
 
-        ChristmasBulbPackage            christmasBulb;
-        SideInfo                        sideInfo;
+        //ChristmasBulbPackage                christmasBulb;
+        std::vector<ChristmasBulbPackage*>  christmasBulb;
+        SideInfo                            sideInfo;
 
         ComPtr<IWICImagingFactory>      wicFactory;
         ComPtr<IWICBitmapDecoder>       gifDecoder;
