@@ -379,12 +379,19 @@ bool MainWindowView::onPaint() {
 
 
     //const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
-    D2D1_RECT_F dest = { 0, 0, 0, 0};
+
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
+    int midPoint = abs(mi.rcMonitor.right - mi.rcMonitor.left);
+    FLOAT offset = (midPoint - sideInfo.sideLength) / 2;
+
+
+
+    D2D1_RECT_F dest = { offset, 0, offset, 0};
     size_t idx = 0;
     size_t flavor = 0;
     for(size_t i = 0; i < sideInfo.curFrame.size(); ++i) {
-
-
 
         const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
 
@@ -424,12 +431,39 @@ void MainWindowView::initSize() {
     mi.cbSize = sizeof(MONITORINFO);
     GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
 
+    // TODO: What if there is no corner bulb?
+
     sideInfo.sideLength = abs(mi.rcMonitor.right - mi.rcMonitor.left);
+    sideInfo.sideLength -= (christmasBulb[0]->getBulbInfo(BulbSide::TOP_LEFT, 0)->width + christmasBulb[0]->getBulbInfo(BulbSide::TOP_RIGHT, 0)->width);
+
     //const LONG height = abs(mi.rcMonitor.bottom - mi.rcMonitor.top);
 
-    const D2DImageInfo* bulbInfo = christmasBulb[0]->getBulbInfo(BulbSide::TOP, 0);
-    sideInfo.curFrame.resize((sideInfo.sideLength / bulbInfo->width));
+    LONG realLen = 0;
+    size_t numBulbs = 0;
+    size_t idx = 0;
+    size_t flavor = 0;
 
+    for(int i = 0;; ++i) {
+
+        const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
+
+        if(realLen + bulbInfo->width > sideInfo.sideLength) {
+            break;
+        }
+
+        realLen += bulbInfo->width;
+        numBulbs++;
+        idx++;
+
+        if(idx >= christmasBulb.size()) {
+            idx = 0;
+            flavor++;
+        }
+
+    }
+
+    sideInfo.sideLength = realLen;
+    sideInfo.curFrame.resize(numBulbs);
 
 
     /*
