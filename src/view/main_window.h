@@ -12,41 +12,9 @@
 
 #include "window_meterics.h"
 #include "subclassed_controls.h"
+#include "../controller/main_window_controller.h"
 #include "../interface/main_window_interface.h"
 #include "../model/bulb.h"
-
-using namespace Microsoft::WRL;
-
-struct DXInfo {
-
-    // These are destroyed in the reverse order they are created.
-    // Ex: D3DDevice is created first, destroyed
-
-    ComPtr<ID3D11Device>        D3DDevice;
-    ComPtr<IDXGIDevice>         DXGIDevice;
-    ComPtr<IDXGIFactory2>       dxFactory;
-    ComPtr<IDXGISwapChain1>     swapChain;
-
-
-    // Our Graphics stuff is destroyed
-    ComPtr<ID2D1Factory2>       d2Factory;
-    ComPtr<ID2D1Device1>        d2Device;
-    ComPtr<ID2D1DeviceContext>  dc;
-    ComPtr<IDXGISurface2>       surface;
-    ComPtr<ID2D1Bitmap1>        bitmap;
-
-    ComPtr<IDCompositionDevice> dcompDevice;
-    ComPtr<IDCompositionTarget> target;
-    ComPtr<IDCompositionVisual> visual;
-};
-
-struct SideInfo {
-    // IDs will be wchar_t of the file name in the end. A file name cannot exceed 32 characters without the .bul, which works
-    // for all the common bulbs I could find (The longest file name I found was 26 characters).
-    //unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
-    std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
-    LONG                    sideLength;     // How many pixels long is this side?
-};
 
 class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInterface {
     friend WndAsClass;
@@ -84,11 +52,13 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
         const HINSTANCE hInstance;
         WindowMetrics   metrics;
         HWND activeModalDialog;
+        MainWindowController mainWindowController;
+
+        // TODO: Most of this is going to moved into the controller if necessary.
 
         DXInfo* dxInfo;
-
         //ChristmasBulbPackage                christmasBulb;
-        std::vector<ChristmasBulbPackage*>  christmasBulb;
+
         SideInfo                            sideInfo;
 
         ComPtr<IWICImagingFactory>      wicFactory;

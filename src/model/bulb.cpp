@@ -121,7 +121,7 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 
     fclose(fp);
 
-    return 0;
+    return ChristmasBulbErrors::SUCCESS;
 
 }
 

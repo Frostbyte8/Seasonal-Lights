@@ -26,8 +26,10 @@ namespace ChristmasBulbConstants {
 }
 
 namespace ChristmasBulbErrors {
+    static const int SUCCESS            = 0;
     static const int INVALID_HEADER     = -1;
     static const int FILE_NOT_FOUND     = -2;
+
 }
 
 enum class BulbSide {
@@ -39,6 +41,7 @@ enum class BulbSide {
     TOP_RIGHT,
     BOTTOM_RIGHT,
     BOTTOM_LEFT,
+    NUM_SIDES,
 };
 
 struct ChristmasBulbHeader {
