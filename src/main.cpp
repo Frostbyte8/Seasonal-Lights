@@ -40,6 +40,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     mainWindowView.loadBulb();
 
+
+    // TODO: This currently only works because we load the bulbs first. This should be changed to be a bit more robust.
+
     mainWindowView.initSize();
 
     retVal = mainWindowView.doLoop();

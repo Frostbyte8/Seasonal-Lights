@@ -18,15 +18,11 @@ static const DWORD WINDOW_STYLE_EX = WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_T
 //==============================================================================
 
 MainWindowView::MainWindowView(const HINSTANCE hIn) : hWnd(NULL), activeModalDialog(NULL),
-hInstance(hIn), dxInfo(NULL), wicFactory(NULL), gifDecoder(NULL) {
+hInstance(hIn) {
     //windowPresenter.setMainWindowInterface(this);
 }
 
 MainWindowView::~MainWindowView() {
-    if(dxInfo) {
-        delete dxInfo;
-        dxInfo = NULL;
-    }
 }
 
 //==============================================================================
@@ -95,14 +91,18 @@ bool MainWindowView::initCOM() {
         return false;
     }
 
-    if(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wicFactory)) != S_OK) {
-        MessageBoxW(NULL, L"Error Initializing WIC Imaging Factory.", L"Error", MB_OK | MB_ICONERROR);
-        return false;
-    }
+    switch(mainWindowController.initWIC()) {
 
-    if(CoCreateInstance(CLSID_WICGifDecoder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&gifDecoder)) != S_OK) {
-        MessageBoxW(NULL, L"Error Initializing GIF decoder.", L"Error", MB_OK | MB_ICONERROR);
-        return false;
+        case ControllerErrors::WIC_INIT_ERROR:
+            MessageBoxW(NULL, L"Error Initializing WIC Imaging Factory.", L"Error", MB_OK | MB_ICONERROR);
+            return false;
+            break;
+
+        case ControllerErrors::GIF_INIT_ERROR:
+            MessageBoxW(NULL, L"Error Initializing GIF decoder.", L"Error", MB_OK | MB_ICONERROR);
+            return false;
+            break;
+
     }
 
     return true;
@@ -124,56 +124,14 @@ void MainWindowView::shutdown() {
 
     // Release the resources held by Direct2D
     mainWindowController.releaseResources();
-    /*
-    for(size_t i = 0; i < christmasBulb.size(); ++i) {
-        delete christmasBulb[i];
-        christmasBulb[i] = NULL;
-    }
-    */
-
-    // Even though they're in ComPTRs, at shutdown we need to make sure they are released as code and drivers
-    // outside our control could still be referencing our objects.
-
-    if(dxInfo->target) {
-        dxInfo->target->SetRoot(NULL);
-    }
-
-    if(dxInfo->visual) {
-        dxInfo->visual->SetContent(NULL);
-    }
-
-    dxInfo->visual.Reset();
-    dxInfo->target.Reset();
-    dxInfo->dcompDevice.Reset();
-
-    dxInfo->dc.Reset();
-    dxInfo->d2Device.Reset();
-    dxInfo->d2Factory.Reset();
-
-    dxInfo->swapChain.Reset();
-    dxInfo->dxFactory.Reset();
-    dxInfo->D3DDevice.Reset();
 
 }
 
 void MainWindowView::loadBulb() {
 
-    /*
-    ChristmasBulbPackage* bulbPackage = new ChristmasBulbPackage();
-
-    bulbPackage->loadBulb("D:\\dump\\12.bul");
-    bulbPackage->initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
-
-    christmasBulb.push_back(bulbPackage);
-
-    bulbPackage = new ChristmasBulbPackage();
-
-    bulbPackage->loadBulb("D:\\dump\\TheLastLeaf.bul");
-    bulbPackage->initBitmaps(wicFactory.Get(), gifDecoder.Get(), dxInfo->dc.Get());
-
-    christmasBulb.push_back(bulbPackage);
-    */
-
+    if(!mainWindowController.loadBulb("D:\\dump\\12.bul")) {
+        MessageBoxW(hWnd, L"TODO: Catch 'loadBulb' Error", L"", MB_ICONERROR | MB_OK);
+    }
     SetTimer(hWnd, 0, 100, NULL);
 
 }
@@ -230,9 +188,9 @@ LRESULT MainWindowView::windowProc(const UINT& msg, const WPARAM wParam, const L
             onPaint();
             // If this doesn't work, DefWindowProc might do more than validate the region,
             // but this *should* work.
-            //ValidateRect(hWnd, NULL);
-            //return 0;
-            return DefWindowProcW(hWnd, msg, wParam, lParam);
+            ValidateRect(hWnd, NULL);
+            return 0;
+            //return DefWindowProcW(hWnd, msg, wParam, lParam);
 
 
         case WM_TIMER:
@@ -256,14 +214,16 @@ bool MainWindowView::onPaint() {
 
     // TODO: Handle no valid bulb
 
-    /*
+    const DXInfo* dxInfo = mainWindowController.getDirect2DLayer()->getDXInfo();
+
+
     dxInfo->dc->BeginDraw();
     dxInfo->dc->Clear();
-    */
 
-
-    /*
     //const D2DImageInfo* bulbInfo = christmasBulb.getBulbInfo(BulbSide::TOP, 0);
+
+    const std::vector<ChristmasBulbPackage*>& christmasBulb = mainWindowController.getChristmasBulbs();
+    const SideInfo sideInfo = mainWindowController.getSizeInfo(BulbSide::TOP);
 
     MONITORINFO mi = {0};
     mi.cbSize = sizeof(MONITORINFO);
@@ -285,11 +245,15 @@ bool MainWindowView::onPaint() {
 
         dxInfo->dc->DrawBitmap(bulbInfo->frames[sideInfo.curFrame[i]], &dest);
 
+        // TODO: Update all frames all at one, not while drawing.
+        /*
         sideInfo.curFrame[i]++;
         if (sideInfo.curFrame[i] >= bulbInfo->frames.size()) {
             sideInfo.curFrame[i] = 0;
 
         }
+        */
+
         dest.left = dest.right;
         idx++;
 
@@ -299,15 +263,14 @@ bool MainWindowView::onPaint() {
         }
 
     }
-    */
 
-    /*
+    // TODO: Check for errors
+
     HRESULT status = dxInfo->dc->EndDraw();
-    __D3D_IS_OK__(status);
+    //__D3D_IS_OK__(status);
 
     status = dxInfo->swapChain->Present(1, 0);
-    __D3D_IS_OK__(status);
-    */
+    //__D3D_IS_OK__(status);
 
     return true;
 

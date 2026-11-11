@@ -33,6 +33,12 @@ int MainWindowController::loadBulb(const std::string &fileName) {
         return ControllerErrors::COULD_NOT_LOAD_BULB;
     }
 
+    // TODO: Check for error.
+    bulbPackage->initBitmaps(wicFactory.Get(), gifDecoder.Get(), d2dLayer.getDXInfo()->dc.Get());
+
+    christmasBulb.push_back(bulbPackage);
+
+    return true;
 
 }
 
@@ -50,7 +56,40 @@ void MainWindowController::updateMonitorSize(const MONITORINFO &mi) {
     monitorDimensions.width =  abs(mi.rcMonitor.right - mi.rcMonitor.left);
     monitorDimensions.height =  abs(mi.rcMonitor.top - mi.rcMonitor.bottom);
 
-    // Update Lengths of sides
+    // Update Lengths of sides (TODO: Very incomplete)
+
+    SideInfo& si = sideInfo[static_cast<size_t>(BulbSide::TOP)];
+
+    si.sideLength = abs(mi.rcMonitor.right - mi.rcMonitor.left);
+    si.sideLength -= (christmasBulb[0]->getBulbInfo(BulbSide::TOP_LEFT, 0)->width + christmasBulb[0]->getBulbInfo(BulbSide::TOP_RIGHT, 0)->width);
+
+    LONG realLen = 0;
+    size_t numBulbs = 0;
+    size_t idx = 0;
+    size_t flavor = 0;
+
+    for(int i = 0;; ++i) {
+
+        const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
+
+        if(realLen + bulbInfo->width > si.sideLength) {
+            break;
+        }
+
+        realLen += bulbInfo->width;
+        numBulbs++;
+        idx++;
+
+        if(idx >= christmasBulb.size()) {
+            idx = 0;
+            flavor++;
+        }
+
+    }
+
+    si.sideLength = realLen;
+    si.curFrame.resize(numBulbs);
+
     // Reset D2D related stuff
 
 }

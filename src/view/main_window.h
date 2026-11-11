@@ -1,12 +1,6 @@
 #pragma once
 
 #include <windows.h>
-#include <wrl.h>
-#include <dxgi1_3.h>
-#include <d3d11_2.h>
-#include <d2d1_2.h>
-#include <d2d1_2helper.h>
-#include <dcomp.h>
 #include <wincodec.h>
 #include <wrl.h>
 
@@ -59,8 +53,4 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
         DXInfo* dxInfo;
         //ChristmasBulbPackage                christmasBulb;
 
-        SideInfo                            sideInfo;
-
-        ComPtr<IWICImagingFactory>      wicFactory;
-        ComPtr<IWICBitmapDecoder>       gifDecoder;
 };
