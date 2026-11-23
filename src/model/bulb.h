@@ -148,6 +148,7 @@ class ChristmasBulbPackage {
         void initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc);
         ~ChristmasBulbPackage();
 
+        // TODO: Rename this. This gets image info, not info about the bulb.
         __forceinline const D2DImageInfo* getBulbInfo(const BulbSide& whichSide, const size_t& flavor) const {
 
             size_t whichFlavor = flavor;

@@ -18,6 +18,14 @@ namespace ControllerErrors {
     static const int GIF_INIT_ERROR         = -5;
 }
 
+enum class UpdateType {
+    NO_FLASHING = 0,
+    TOGETHER,
+    ALTERNATING,
+    CHASE,
+    RANDOM,
+};
+
 struct MonitorDimensions {
     LONG xStart;
     LONG yStart;
@@ -25,12 +33,21 @@ struct MonitorDimensions {
     LONG height;
 };
 
+struct BulbInfo {
+    //packageID
+    size_t          currentFrame;
+    size_t          maxFrames;
+    unsigned int    whichFlavor;
+};
+
+
 struct SideInfo {
 
     // IDs will be wchar_t of the file name in the end. A file name cannot exceed 32 characters without the .bul, which works
     // for all the common bulbs I could find (The longest file name I found was 26 characters).
     //unsigned __int32        bulbIDs[5];     // Which Five bulbs do we look up?
-    std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
+    //std::vector<__int16>    curFrame;       // For each and every bulb on the string, the current frame.
+    std::vector<BulbInfo>   bulbInfo;       // For each and every bulb on the string, the current frame.
     LONG                    sideLength;     // How many pixels long is this side?
 
 };
@@ -39,7 +56,7 @@ class MainWindowController {
 
     public:
 
-        MainWindowController() : wicFactory(NULL), gifDecoder(NULL) {
+        MainWindowController() : wicFactory(NULL), gifDecoder(NULL), updateType(UpdateType::TOGETHER) {
         }
 
 
@@ -57,9 +74,11 @@ class MainWindowController {
         }
 
         void releaseResources();
+        // TODO: Shouldn't this be getSideInfo?
         const SideInfo& getSizeInfo(const BulbSide& side) const { return sideInfo[static_cast<size_t>(side)]; }
         void updateMonitorSize(const MONITORINFO& mi);
         int loadBulb(const std::string& fileName);
+        void updateBulbs();
         bool initDirect2D();
 
         __forceinline const std::vector<ChristmasBulbPackage*>& getChristmasBulbs() const { return christmasBulb; }
@@ -74,5 +93,6 @@ class MainWindowController {
         Direct2DLayer                       d2dLayer;
         ComPtr<IWICImagingFactory>          wicFactory;
         ComPtr<IWICBitmapDecoder>           gifDecoder;
+        UpdateType                          updateType;
 
 };

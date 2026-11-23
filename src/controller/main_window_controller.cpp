@@ -68,28 +68,64 @@ void MainWindowController::updateMonitorSize(const MONITORINFO &mi) {
     size_t idx = 0;
     size_t flavor = 0;
 
+    BulbInfo bi = {0};
+
+    // TODO: Figure out a good number to put here as a constant, and make sure corners only reserve one.
+    si.bulbInfo.reserve(60);
+
     for(int i = 0;; ++i) {
 
-        const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
+        const D2DImageInfo* imgInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
 
-        if(realLen + bulbInfo->width > si.sideLength) {
+        if(realLen + imgInfo->width > si.sideLength) {
             break;
         }
 
-        realLen += bulbInfo->width;
+        realLen += imgInfo->width;
+
+        bi.currentFrame = 0;
+        bi.maxFrames = imgInfo->frames.size();
+        bi.whichFlavor = 0; // TODO: how to make sure flavor exists
+
+        si.bulbInfo.push_back(bi);
+
         numBulbs++;
         idx++;
 
         if(idx >= christmasBulb.size()) {
             idx = 0;
-            flavor++;
+            //flavor++;
         }
 
     }
 
     si.sideLength = realLen;
-    si.curFrame.resize(numBulbs);
+    // TODO: Possibly shrink to fit?
+    //si.bulbInfo.resize(numBulbs);
+
 
     // Reset D2D related stuff
+
+}
+
+//------------------------------------------------------------------------------
+// updateBulbs - Animate bulbs (or not) based on what the user has selected
+//------------------------------------------------------------------------------
+
+void MainWindowController::updateBulbs() {
+
+    //D2DImageInfo* imf = NULL;
+
+    //SideInfo& si = sideInfo[static_cast<size_t>(BulbSide::TOP)];
+    std::vector<BulbInfo>& bulbInfo = sideInfo[static_cast<size_t>(BulbSide::TOP)].bulbInfo;
+
+    for(size_t i = 0; i < bulbInfo.size() ; ++i) {
+
+        bulbInfo[i].currentFrame++;
+        if(bulbInfo[i].maxFrames == bulbInfo[i].currentFrame) {
+            bulbInfo[i].currentFrame = 0;
+        }
+
+    }
 
 }

@@ -50,7 +50,7 @@ class MainWindowView : public WndAsClass<MainWindowView>, public MainWindowInter
 
         // TODO: Most of this is going to moved into the controller if necessary.
 
-        DXInfo* dxInfo;
+        //DXInfo* dxInfo;
         //ChristmasBulbPackage                christmasBulb;
 
 };

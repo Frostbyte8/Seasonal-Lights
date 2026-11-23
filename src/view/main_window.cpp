@@ -195,6 +195,7 @@ LRESULT MainWindowView::windowProc(const UINT& msg, const WPARAM wParam, const L
 
         case WM_TIMER:
             InvalidateRect(hWnd, NULL, TRUE);
+            mainWindowController.updateBulbs();
             SetTimer(hWnd, 0, 100, NULL);
             break;
 
@@ -229,21 +230,21 @@ bool MainWindowView::onPaint() {
     mi.cbSize = sizeof(MONITORINFO);
     GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &mi);
     int midPoint = abs(mi.rcMonitor.right - mi.rcMonitor.left);
-    FLOAT offset = (midPoint - sideInfo.sideLength) / 2;
+    FLOAT offset = (midPoint - sideInfo.sideLength) / 2.0;
 
 
 
     D2D1_RECT_F dest = { offset, 0, offset, 0};
     size_t idx = 0;
     size_t flavor = 0;
-    for(size_t i = 0; i < sideInfo.curFrame.size(); ++i) {
+    for(size_t i = 0; i < sideInfo.bulbInfo.size(); ++i) {
 
-        const D2DImageInfo* bulbInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, flavor);
+        const D2DImageInfo* imgInfo = christmasBulb[idx]->getBulbInfo(BulbSide::TOP, sideInfo.bulbInfo[i].whichFlavor);
 
-        dest.bottom = bulbInfo->height;
-        dest.right += bulbInfo->width;
+        dest.bottom = imgInfo->height;
+        dest.right += imgInfo->width;
 
-        dxInfo->dc->DrawBitmap(bulbInfo->frames[sideInfo.curFrame[i]], &dest);
+        dxInfo->dc->DrawBitmap(imgInfo->frames[sideInfo.bulbInfo[i].currentFrame], &dest);
 
         // TODO: Update all frames all at one, not while drawing.
         /*
@@ -259,7 +260,7 @@ bool MainWindowView::onPaint() {
 
         if(idx >= christmasBulb.size()) {
             idx = 0;
-            flavor++;
+            //flavor++;
         }
 
     }

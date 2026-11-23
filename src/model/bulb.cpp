@@ -132,6 +132,8 @@ int ChristmasBulbPackage::loadBulb(const std::string& path) {
 // TODO: We can probably split this function out of Bulb.cpp, and find another way
 // to process the bulb so this can remain more platform independent.
 
+// TODO: Set a Maximum amount of frames (64?)
+
 void ChristmasBulbPackage::initBitmaps(IWICImagingFactory* factory, IWICBitmapDecoder* decoder, ID2D1DeviceContext* dc) {
 
     // Now we need to convert the gif data into something Direct2D Can use.
