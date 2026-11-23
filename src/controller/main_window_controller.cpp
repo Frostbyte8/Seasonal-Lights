@@ -85,7 +85,7 @@ void MainWindowController::updateMonitorSize(const MONITORINFO &mi) {
 
         bi.currentFrame = 0;
         bi.maxFrames = imgInfo->frames.size();
-        bi.whichFlavor = 0; // TODO: how to make sure flavor exists
+        bi.whichFlavor = flavor; // TODO: how to make sure flavor exists
 
         si.bulbInfo.push_back(bi);
 
@@ -94,7 +94,7 @@ void MainWindowController::updateMonitorSize(const MONITORINFO &mi) {
 
         if(idx >= christmasBulb.size()) {
             idx = 0;
-            //flavor++;
+            flavor++;
         }
 
     }
